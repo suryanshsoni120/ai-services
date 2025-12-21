@@ -44,11 +44,8 @@ def health():
 
 @app.post("/ai/predict-category")
 def predict(req: ExpenseRequest):
-    category, confidence = predict_category(req.description)
-    return {
-        "category": category,
-        "confidence": confidence
-    }
+    result = predict_category(req.description)
+    return result
 
 @app.post("/ai/generate-insights")
 def generate(req: InsightRequest):

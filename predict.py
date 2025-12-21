@@ -1,38 +1,43 @@
-from model import embed, category_embeddings
 from rules import KEYWORD_RULES
-import numpy as np
+from utils import normalize
 
-CONFIDENCE_THRESHOLD = 0.45
+def score_text(text: str):
+    text = normalize(text)
+    scores = {}
 
-def cosine_similarity(a, b):
-    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+    for category, rules in KEYWORD_RULES.items():
+        score = 0
 
-def rule_based_category(text):
-    text_lower = text.lower()
-    for category, keywords in KEYWORD_RULES.items():
-        for keyword in keywords:
-            if keyword in text_lower:
-                return category
-    return None
+        for word in rules.get("strong", []):
+            if word in text:
+                score += 3   # stronger signal
 
-def predict_category(text):
-    # 1️⃣ RULE-BASED (HIGH CONFIDENCE)
-    rule_category = rule_based_category(text)
-    if rule_category:
-        return rule_category, 0.9
+        for word in rules.get("weak", []):
+            if word in text:
+                score += 1
 
-    # 2️⃣ AI-BASED
-    text_vec = embed(text)
-    best_cat = "Other"
-    best_score = 0
+        if score > 0:
+            scores[category] = score
 
-    for cat, vec in category_embeddings.items():
-        score = cosine_similarity(text_vec, vec)
-        if score > best_score:
-            best_score = score
-            best_cat = cat
+    return scores
 
-    if best_score < CONFIDENCE_THRESHOLD:
-        return "Other", round(float(best_score), 2)
 
-    return best_cat, round(float(best_score), 2)
+def predict_category(text: str):
+    if not text or not text.strip():
+        return {"category": "Other", "confidence": 0.0}
+
+    scores = score_text(text)
+
+    if not scores:
+        return {"category": "Other", "confidence": 0.3}
+
+    best_category = max(scores, key=scores.get)
+    best_score = scores[best_category]
+
+    # Confidence scaling
+    confidence = min(0.95, 0.5 + best_score * 0.1)
+
+    return {
+        "category": best_category,
+        "confidence": round(confidence, 2)
+    }
