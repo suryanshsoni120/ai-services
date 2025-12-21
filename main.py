@@ -9,26 +9,16 @@ import os
 load_dotenv()
 
 PORT = int(os.getenv("PORT", 8000))
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "").split(",")
+origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
 
 app = FastAPI(title="Finance AI Service")
 
-if "*" in ALLOWED_ORIGINS:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=False,
-        allow_methods=["POST", "OPTIONS"],
-        allow_headers=["Content-Type", "Authorization"],
-    )
-else:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=ALLOWED_ORIGINS,
-        allow_credentials=False,
-        allow_methods=["POST", "OPTIONS"],
-        allow_headers=["Content-Type", "Authorization"],
-    )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_methods=["POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
+)
 
 class ExpenseRequest(BaseModel):
     description: str
