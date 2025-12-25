@@ -34,12 +34,18 @@ def health():
 
 @app.post("/ai/predict-category")
 def predict(req: ExpenseRequest):
-    result = predict_category(req.description)
-    return result
+    try:
+        result = predict_category(req.description)
+        return result
+    except Exception as e:
+        return {
+            "error": str(e)
+        }
 
 @app.post("/ai/generate-insights")
 def generate(req: InsightRequest):
-    insights = generate_insights(req.summary, req.breakdown, req.alerts)
-    return {
-        "insights": insights
-    }
+    try:
+        insights = generate_insights(req.summary, req.breakdown, req.alerts)
+        return {"insights": insights}
+    except Exception as e:
+        return {"error": str(e)}
