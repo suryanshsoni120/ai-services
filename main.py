@@ -1,15 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from typing import List, Dict, Optional
 from predict import predict_category
 from insights import generate_insights
-from dotenv import load_dotenv
 import os
 
-load_dotenv()
-
-PORT = int(os.getenv("PORT", 8000))
-origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
+origins = os.getenv("ALLOWED_ORIGINS")
+origins = origins.split(",") if origins else ["*"]
 
 app = FastAPI(title="Finance AI Service")
 
@@ -23,10 +21,18 @@ app.add_middleware(
 class ExpenseRequest(BaseModel):
     description: str
 
+class BreakdownItem(BaseModel):
+    category: str
+    total: float
+
+class AlertItem(BaseModel):
+    type: str
+    category: Optional[str] = None
+
 class InsightRequest(BaseModel):
-    summary: dict
-    breakdown: list
-    alerts: list
+    summary: Dict[str, float]
+    breakdown: List[BreakdownItem]
+    alerts: List[AlertItem]
 
 @app.get("/health")
 def health():
@@ -34,18 +40,16 @@ def health():
 
 @app.post("/ai/predict-category")
 def predict(req: ExpenseRequest):
-    try:
-        result = predict_category(req.description)
-        return result
-    except Exception as e:
-        return {
-            "error": str(e)
-        }
+    return predict_category(req.description)
 
 @app.post("/ai/generate-insights")
 def generate(req: InsightRequest):
-    try:
-        insights = generate_insights(req.summary, req.breakdown, req.alerts)
-        return {"insights": insights}
-    except Exception as e:
-        return {"error": str(e)}
+    if len(req.breakdown) > 10 or len(req.alerts) > 10:
+        return {"insights": ["Data too large to analyze."]}
+
+    insights = generate_insights(
+        req.summary,
+        req.breakdown,
+        req.alerts
+    )
+    return {"insights": insights}
