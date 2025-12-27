@@ -34,7 +34,7 @@ class InsightRequest(BaseModel):
     breakdown: List[BreakdownItem]
     alerts: List[AlertItem]
 
-@app.get("/health")
+@app.get("/ai/health")
 def health():
     return {"status": "ok"}
 
