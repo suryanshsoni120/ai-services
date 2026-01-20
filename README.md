@@ -1,9 +1,3 @@
-
----
-
-# 📘 `finance-ai-services`
-
-```md
 # FinanceAI AI Service
 
 AI microservice for FinanceAI responsible for transaction categorization
